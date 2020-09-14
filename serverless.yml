@@ -1,4 +1,4 @@
-service: tuff-times
+service: TempTaking
 
 frameworkVersion: '2'
 

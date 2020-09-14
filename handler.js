@@ -1,5 +1,4 @@
-import {botToken} from './secret.js'
-
+var { botToken} = require('./secret.js')
 
 const rp = require('request-promise');
 async function getShortUrl(longUrl) {
