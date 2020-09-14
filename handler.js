@@ -1,5 +1,7 @@
+import {botToken} from './secret.js'
+
+
 const rp = require('request-promise');
-const TELEGRAM_TOKEN = '1176495554:AAGKKtGxQSvmH1A0xQXlvhmXiRK0GaDHQng';
 async function getShortUrl(longUrl) {
   const options = {
     method: 'POST',
@@ -16,7 +18,7 @@ async function getShortUrl(longUrl) {
 async function sendToUser(chat_id, text) {
   const options = {
     method: 'GET',
-    uri: 'https://api.telegram.org/bot1176495554:AAGKKtGxQSvmH1A0xQXlvhmXiRK0GaDHQng/sendMessage',
+    uri: 'https://api.telegram.org/bot' + botToken + '/sendMessage',
     qs: {
       chat_id,
       text
