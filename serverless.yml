@@ -1,0 +1,16 @@
+service: tuff-times
+
+frameworkVersion: '2'
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+
+functions:
+  tufftimes:
+    handler: handler.tufftimes
+    events:
+      - http:
+          path: tufftimes
+          method: post
+          cors: true
