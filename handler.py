@@ -7,6 +7,8 @@ from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 from firebase_admin import credentials
 from firebase_admin import db
 import firebase_admin
+import datetime
+from pytz import timezone
 
 cred = credentials.Certificate('serviceAccountKey.json')
 config = {
@@ -69,8 +71,22 @@ def webhook(event, context):
           callback = update.callback_query
           text = callback.data
           query_id = callback.id
+          user = callback.from_user
+          name = user.first_name + " " + user.last_name
+          inline_id = callback.inline_message_id
+          message = callback.message
 
-          bot.answerCallbackQuery(callback_query_id=query_id, text=text)
+
+          date = datetime.datetime.now(timezone('Asia/Singapore')).date().strftime("%d:%m:%Y")
+          time = datetime.datetime.now(timezone('Asia/Singapore')).time().strftime("%H:%M:%S")
+
+          ref = db.reference(date).child(name)
+          ref.update({
+            time : text
+          })
+          bot.editMessageText(chat_id=message.chat.id, message_id=message.message_id, text="You submitted your temperature as " + text)
+          bot.editMessageReplyMarkup(chat_id=message.chat.id, message_id=message.message_id, reply_markup = InlineKeyboardMarkup([]))
+          bot.answerCallbackQuery(callback_query_id=query_id, text="Done!")
         else:
           text = update.message.text
           chat_id = update.message.chat.id
@@ -84,12 +100,6 @@ def webhook(event, context):
             bot.sendMessage(chat_id=chat_id, text="Write your temperature here:", reply_markup=reply_markup)
           
           elif text == '/db':
-            ref.push({
-              'color': 'purple',
-              'width': 7,
-              'height': 8,
-              'length': 6
-          })
             bot.sendMessage(chat_id=chat_id, text="Updated db")
 
         logger.info('Message sent')
@@ -126,23 +136,31 @@ def takeTemp():
     inline_keyboard = [
       [
         InlineKeyboardButton(36.0, callback_data="36.0"),
+        InlineKeyboardButton(36.1, callback_data="36.1"),
+        InlineKeyboardButton(36.2, callback_data="36.2"),
+        InlineKeyboardButton(36.3, callback_data="36.3"),
+        InlineKeyboardButton(36.4, callback_data="36.4"),
+      ],
+      [
         InlineKeyboardButton(36.5, callback_data="36.5"),
-        InlineKeyboardButton(37.0, callback_data="37.0")
+        InlineKeyboardButton(36.6, callback_data="36.6"),
+        InlineKeyboardButton(36.7, callback_data="36.7"),
+        InlineKeyboardButton(36.8, callback_data="36.8"),
+        InlineKeyboardButton(36.9, callback_data="36.9"),
+      ],
+      [
+        InlineKeyboardButton(37.0, callback_data="37.0"),
+        InlineKeyboardButton(37.1, callback_data="37.1"),
+        InlineKeyboardButton(37.2, callback_data="37.2"),
+        InlineKeyboardButton(37.3, callback_data="37.3"),
+        InlineKeyboardButton(37.4, callback_data="37.4"),
       ],
       [
         InlineKeyboardButton(37.5, callback_data="37.5"),
-        InlineKeyboardButton(5, callback_data="5"),
-        InlineKeyboardButton(6, callback_data="6")
-      ],
-      [
-        InlineKeyboardButton(7, callback_data="7"),
-        InlineKeyboardButton(8, callback_data="8"),
-        InlineKeyboardButton(9, callback_data="9")
-      ],
-      [
-        InlineKeyboardButton(".", callback_data="."),
-        InlineKeyboardButton(0, callback_data="0"),
-        InlineKeyboardButton("#", callback_data="#")
+        InlineKeyboardButton(37.6, callback_data="37.6"),
+        InlineKeyboardButton(37.7, callback_data="37.7"),
+        InlineKeyboardButton(37.8, callback_data="37.8"),
+        InlineKeyboardButton(37.9, callback_data="37.9"),
       ]
     ]
   )
