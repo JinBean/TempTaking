@@ -4,13 +4,28 @@ frameworkVersion: '2'
 
 provider:
   name: aws
-  runtime: nodejs12.x
+  # runtime: nodejs12.x
+  runtime: python3.6
+
+# functions:
+#   tufftimes:
+#     handler: handler.tufftimes
+#     events:
+#       - http:
+#           path: tufftimes
+#           method: post
+#           cors: true
 
 functions:
-  tufftimes:
-    handler: handler.tufftimes
+  webhook:
+    handler: handler.webhook
     events:
-      - http:
-          path: tufftimes
-          method: post
-          cors: true
+      - http: POST /
+
+  set_webhook:
+    handler: handler.set_webhook
+    events:
+      - http: POST /set_webhook
+
+plugins:
+  - serverless-python-requirements

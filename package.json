@@ -1,7 +1,7 @@
 {
   "name": "tuff_times",
   "version": "1.0.0",
-  "description": "",
+  "description": "Damn this is hard.",
   "main": "handler.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -9,7 +9,19 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "package.json": "^2.0.1",
     "request": "^2.88.2",
     "request-promise": "^4.2.6"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jonchann/TempTaking.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jonchann/TempTaking/issues"
+  },
+  "homepage": "https://github.com/jonchann/TempTaking#readme",
+  "devDependencies": {
+    "serverless-python-requirements": "^5.1.0"
   }
 }

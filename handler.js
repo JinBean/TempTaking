@@ -35,7 +35,7 @@ module.exports.tufftimes = async event => {
     let message = '';
     try {
       const result = await getShortUrl(text);
-      message = 'Input: ' + text + ',\nShort: ' + result.result_url;
+      message = 'This is your Input: ' + text + ',\nShort: ' + result.result_url;
     } catch (error) {
       message = 'Input: ' + text + '\nError: ' + (error.message);
     }
