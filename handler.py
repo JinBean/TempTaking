@@ -98,9 +98,6 @@ def webhook(event, context):
           elif text == '/takeTemp':
             reply_markup = takeTemp()
             bot.sendMessage(chat_id=chat_id, text="Write your temperature here:", reply_markup=reply_markup)
-          
-          elif text == '/db':
-            bot.sendMessage(chat_id=chat_id, text="Updated db")
 
         logger.info('Message sent')
 
