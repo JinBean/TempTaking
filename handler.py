@@ -3,9 +3,25 @@ import telegram
 import os
 import logging
 import secret
+from telegram import InlineKeyboardMarkup, InlineKeyboardButton
+from firebase_admin import credentials
+from firebase_admin import db
+import firebase_admin
 
+cred = credentials.Certificate('serviceAccountKey.json')
+config = {
+  "apiKey": secret.firebaseAPIKey,
+  "authDomain": secret.authDomain,
+  "databaseURL": secret.databaseURL,
+  "projectId": "temptaking-b16aa",
+  "storageBucket": secret.storageBucket,
+  "messagingSenderId": "518980129989",
+  "appId": "1:518980129989:web:bda2018de7d490ff24ccac",
+  "measurementId": "G-RS3CCBFC32"
+}
+firebase = firebase_admin.initialize_app(cred, config)
+ref = db.reference('/')
 
-# Logging is cool!
 logger = logging.getLogger()
 if logger.handlers:
     for handler in logger.handlers:
@@ -48,21 +64,33 @@ def webhook(event, context):
     if event.get('httpMethod') == 'POST' and event.get('body'): 
         logger.info('Message received')
         update = telegram.Update.de_json(json.loads(event.get('body')), bot)
-        chat_id = update.message.chat.id
-        text = update.message.text
-        user = update.message.from_user
-        callback = update.callback_query
+          
+        if update.callback_query:
+          callback = update.callback_query
+          text = callback.data
+          query_id = callback.id
 
-        if callback:
-          bot.sendMessage(chat_id=chat_id, text=callback.data)
+          bot.answerCallbackQuery(callback_query_id=query_id, text=text)
+        else:
+          text = update.message.text
+          chat_id = update.message.chat.id
 
-        elif text == '/start':
-            text = start()
-            bot.sendMessage(chat_id=chat_id, text=text)
+          if text == '/start':
+              text = start()
+              bot.sendMessage(chat_id=chat_id, text=text)
 
-        elif text == '/takeTemp':
-          reply_markup = takeTemp()
-          bot.sendMessage(chat_id=chat_id, text="Write your temperature here:", reply_markup=reply_markup)
+          elif text == '/takeTemp':
+            reply_markup = takeTemp()
+            bot.sendMessage(chat_id=chat_id, text="Write your temperature here:", reply_markup=reply_markup)
+          
+          elif text == '/db':
+            ref.push({
+              'color': 'purple',
+              'width': 7,
+              'height': 8,
+              'length': 6
+          })
+            bot.sendMessage(chat_id=chat_id, text="Updated db")
 
         logger.info('Message sent')
 
@@ -94,9 +122,28 @@ def start():
   return("""Hello, use this bot to record your temperature!""")
 
 def takeTemp():
-  buttons = []
-  temperatures = ['36.0','36,5', '37.0', '37.5']
-  for element in temperatures:
-    buttons.append(telegram.InlineKeyboardButton(text=element, callback_data=element))
-  reply_markup = telegram.InlineKeyboardMarkup(buttons)
-  return(reply_markup)
+  IKM = InlineKeyboardMarkup(
+    inline_keyboard = [
+      [
+        InlineKeyboardButton(36.0, callback_data="36.0"),
+        InlineKeyboardButton(36.5, callback_data="36.5"),
+        InlineKeyboardButton(37.0, callback_data="37.0")
+      ],
+      [
+        InlineKeyboardButton(37.5, callback_data="37.5"),
+        InlineKeyboardButton(5, callback_data="5"),
+        InlineKeyboardButton(6, callback_data="6")
+      ],
+      [
+        InlineKeyboardButton(7, callback_data="7"),
+        InlineKeyboardButton(8, callback_data="8"),
+        InlineKeyboardButton(9, callback_data="9")
+      ],
+      [
+        InlineKeyboardButton(".", callback_data="."),
+        InlineKeyboardButton(0, callback_data="0"),
+        InlineKeyboardButton("#", callback_data="#")
+      ]
+    ]
+  )
+  return(IKM)
