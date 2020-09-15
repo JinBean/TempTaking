@@ -22,7 +22,6 @@ config = {
   "measurementId": "G-RS3CCBFC32"
 }
 firebase = firebase_admin.initialize_app(cred, config)
-ref = db.reference('/')
 
 logger = logging.getLogger()
 if logger.handlers:
@@ -75,18 +74,29 @@ def webhook(event, context):
           name = user.first_name + " " + user.last_name
           inline_id = callback.inline_message_id
           message = callback.message
+          chat_id = message.chat.id
 
 
           date = datetime.datetime.now(timezone('Asia/Singapore')).date().strftime("%d:%m:%Y")
           time = datetime.datetime.now(timezone('Asia/Singapore')).time().strftime("%H:%M:%S")
 
-          ref = db.reference(date).child(name)
-          ref.update({
-            time : text
-          })
-          bot.editMessageText(chat_id=message.chat.id, message_id=message.message_id, text="You submitted your temperature as " + text)
-          bot.editMessageReplyMarkup(chat_id=message.chat.id, message_id=message.message_id, reply_markup = InlineKeyboardMarkup([]))
-          bot.answerCallbackQuery(callback_query_id=query_id, text="Done!")
+          ref = db.reference(date).child(name).child(time[:2] + "00 hours")
+
+          if "temp" in text:
+            ref.update({
+              time : text.split(": ")[1]
+            })
+            bot.editMessageText(chat_id=chat_id, message_id=message.message_id, text="You submitted your temperature as " + text.split(": ")[1], reply_markup = InlineKeyboardMarkup([]))
+            bot.answerCallbackQuery(callback_query_id=query_id)
+            reply_markup = reportingSick()
+            bot.sendMessage(chat_id=chat_id, text="Will you be reporting sick outside today?:", reply_markup=reply_markup)
+          elif "sick" in text:
+            ref.update({
+              time : text.split(": ")[1]
+            })
+            bot.editMessageText(chat_id=chat_id, message_id=message.message_id, text="You are: " + text.split(": ")[1], reply_markup = InlineKeyboardMarkup([]))
+            bot.answerCallbackQuery(callback_query_id=query_id)
+
         else:
           text = update.message.text
           chat_id = update.message.chat.id
@@ -97,7 +107,7 @@ def webhook(event, context):
 
           elif text == '/takeTemp':
             reply_markup = takeTemp()
-            bot.sendMessage(chat_id=chat_id, text="Write your temperature here:", reply_markup=reply_markup)
+            bot.sendMessage(chat_id=chat_id, text="Temperature Reading:", reply_markup=reply_markup)
 
         logger.info('Message sent')
 
@@ -132,33 +142,48 @@ def takeTemp():
   IKM = InlineKeyboardMarkup(
     inline_keyboard = [
       [
-        InlineKeyboardButton(36.0, callback_data="36.0"),
-        InlineKeyboardButton(36.1, callback_data="36.1"),
-        InlineKeyboardButton(36.2, callback_data="36.2"),
-        InlineKeyboardButton(36.3, callback_data="36.3"),
-        InlineKeyboardButton(36.4, callback_data="36.4"),
+        InlineKeyboardButton(36.0, callback_data="temp: 36.0"),
+        InlineKeyboardButton(36.1, callback_data="temp: 36.1"),
+        InlineKeyboardButton(36.2, callback_data="temp: 36.2"),
+        InlineKeyboardButton(36.3, callback_data="temp: 36.3"),
+        InlineKeyboardButton(36.4, callback_data="temp: 36.4"),
       ],
       [
-        InlineKeyboardButton(36.5, callback_data="36.5"),
-        InlineKeyboardButton(36.6, callback_data="36.6"),
-        InlineKeyboardButton(36.7, callback_data="36.7"),
-        InlineKeyboardButton(36.8, callback_data="36.8"),
-        InlineKeyboardButton(36.9, callback_data="36.9"),
+        InlineKeyboardButton(36.5, callback_data="temp: 36.5"),
+        InlineKeyboardButton(36.6, callback_data="temp: 36.6"),
+        InlineKeyboardButton(36.7, callback_data="temp: 36.7"),
+        InlineKeyboardButton(36.8, callback_data="temp: 36.8"),
+        InlineKeyboardButton(36.9, callback_data="temp: 36.9"),
       ],
       [
-        InlineKeyboardButton(37.0, callback_data="37.0"),
-        InlineKeyboardButton(37.1, callback_data="37.1"),
-        InlineKeyboardButton(37.2, callback_data="37.2"),
-        InlineKeyboardButton(37.3, callback_data="37.3"),
-        InlineKeyboardButton(37.4, callback_data="37.4"),
+        InlineKeyboardButton(37.0, callback_data="temp: 37.0"),
+        InlineKeyboardButton(37.1, callback_data="temp: 37.1"),
+        InlineKeyboardButton(37.2, callback_data="temp: 37.2"),
+        InlineKeyboardButton(37.3, callback_data="temp: 37.3"),
+        InlineKeyboardButton(37.4, callback_data="temp: 37.4"),
       ],
       [
-        InlineKeyboardButton(37.5, callback_data="37.5"),
-        InlineKeyboardButton(37.6, callback_data="37.6"),
-        InlineKeyboardButton(37.7, callback_data="37.7"),
-        InlineKeyboardButton(37.8, callback_data="37.8"),
-        InlineKeyboardButton(37.9, callback_data="37.9"),
+        InlineKeyboardButton(37.5, callback_data="temp: 37.5"),
+        InlineKeyboardButton(37.6, callback_data="temp: 37.6"),
+        InlineKeyboardButton(37.7, callback_data="temp: 37.7"),
+        InlineKeyboardButton(37.8, callback_data="temp: 37.8"),
+        InlineKeyboardButton(37.9, callback_data="temp: 37.9"),
       ]
     ]
   )
-  return(IKM)
+  return IKM
+
+def reportingSick():
+  IKM = InlineKeyboardMarkup(
+    inline_keyboard = [
+      [
+        InlineKeyboardButton("Yes", callback_data="sick: Reporting sick outside today"),
+        InlineKeyboardButton("No", callback_data="sick: Not Reporting sick"),
+      ],
+      [
+        InlineKeyboardButton("Currently on MC", callback_data="sick: Currently on MC"),
+      ]
+    ]
+  )
+  return IKM
+
