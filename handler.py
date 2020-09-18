@@ -39,7 +39,6 @@ ERROR_RESPONSE = {
     'body': json.dumps('Oops, something went wrong!')
 }
 
-
 def configure_telegram():
     """
     Configures the bot with a Telegram Token.
@@ -61,11 +60,14 @@ def webhook(event, context):
 
     bot = configure_telegram()
     logger.info('Event: {}'.format(event))
+    date = datetime.datetime.now(timezone('Asia/Singapore')).date().strftime("%d:%m:%Y")
+    time = datetime.datetime.now(timezone('Asia/Singapore')).time().strftime("%H:%M:%S")
 
     if event.get('httpMethod') == 'POST' and event.get('body'): 
         logger.info('Message received')
         update = telegram.Update.de_json(json.loads(event.get('body')), bot)
-          
+        
+        # Checks if message is a callback query
         if update.callback_query:
           callback = update.callback_query
           text = callback.data
@@ -76,30 +78,63 @@ def webhook(event, context):
           message = callback.message
           chat_id = message.chat.id
 
-
-          date = datetime.datetime.now(timezone('Asia/Singapore')).date().strftime("%d:%m:%Y")
-          time = datetime.datetime.now(timezone('Asia/Singapore')).time().strftime("%H:%M:%S")
-
-          ref = db.reference(date).child(name).child(time[:2] + "00 hours")
-
+          count_ref = db.reference(date).child(name).child("count").get()
+          count = count_ref["count"]
+          ref = db.reference(date).child(name)
+          
+          # Callback after selecting temperature
           if "temp" in text:
             ref.update({
-              time : text.split(": ")[1]
+              count : {
+                "temp: " + time : text.split(": ")[1]
+              }
             })
             bot.editMessageText(chat_id=chat_id, message_id=message.message_id, text="You submitted your temperature as " + text.split(": ")[1], reply_markup = InlineKeyboardMarkup([]))
             bot.answerCallbackQuery(callback_query_id=query_id)
             reply_markup = reportingSick()
             bot.sendMessage(chat_id=chat_id, text="Will you be reporting sick outside today?:", reply_markup=reply_markup)
+
+          # Callback after submitting MC query
           elif "sick" in text:
-            ref.update({
-              time : text.split(": ")[1]
+            ref.child(str(count)).update({
+              "sick " + time : text.split(": ")[1]
             })
             bot.editMessageText(chat_id=chat_id, message_id=message.message_id, text="You are: " + text.split(": ")[1], reply_markup = InlineKeyboardMarkup([]))
             bot.answerCallbackQuery(callback_query_id=query_id)
+            reply_markup = symptoms()
+            bot.sendMessage(chat_id=chat_id, text="Please select any symptoms you might have (click again to deselect) and click the submit button when you are done: \nSymptoms:", reply_markup=reply_markup)
 
+          # Callback after selecting symptoms without submitting
+          elif "continue" in text:
+            symptom = text.split(": ")[1]
+            if symptom in message.text:
+              updated_text = message.text.replace("\n" + symptom, "")
+            else:
+              updated_text = message.text + "\n" + symptom
+            reply_markup = symptoms()
+            bot.editMessageText(chat_id=chat_id, message_id=message.message_id, text=updated_text, reply_markup = reply_markup)
+
+          # Callback after submitting symptoms
+          elif "submit" in text:
+            final_text = str(message.text.split("\nSymptoms:")[-1])
+            if final_text != '':
+              final_text = final_text.replace("\n", "", 1)
+              final_text = final_text.replace("\n", ", ")
+            else:
+              final_text = "None"
+            ref.child(str(count)).update({
+              "symptoms " + time : final_text
+            })
+            bot.editMessageText(chat_id=chat_id, message_id=message.message_id, text="You have the following symptoms: " + final_text, reply_markup = InlineKeyboardMarkup([]))
+
+
+        # Checks if message is initiated by user
         else:
-          text = update.message.text
-          chat_id = update.message.chat.id
+          message = update.message
+          text = message.text
+          chat_id = message.chat.id
+          user = message.from_user
+          name = user.first_name + " " + user.last_name
 
           if text == '/start':
               text = start()
@@ -107,6 +142,16 @@ def webhook(event, context):
 
           elif text == '/takeTemp':
             reply_markup = takeTemp()
+            ref = db.reference(date).child(name).child("count")
+            count_dict = ref.get()
+            if count_dict:
+              ref.update({
+                "count" : count_dict["count"] + 1
+              })
+            else:
+              ref.update({
+                "count" : 1
+              })
             bot.sendMessage(chat_id=chat_id, text="Temperature Reading:", reply_markup=reply_markup)
 
         logger.info('Message sent')
@@ -178,10 +223,31 @@ def reportingSick():
     inline_keyboard = [
       [
         InlineKeyboardButton("Yes", callback_data="sick: Reporting sick outside today"),
-        InlineKeyboardButton("No", callback_data="sick: Not Reporting sick"),
+        InlineKeyboardButton("No", callback_data="sick: Not reporting sick"),
       ],
       [
         InlineKeyboardButton("Currently on MC", callback_data="sick: Currently on MC"),
+      ]
+    ]
+  )
+  return IKM
+
+
+
+def symptoms():
+  IKM = InlineKeyboardMarkup(
+    inline_keyboard = [
+      [
+        InlineKeyboardButton("Fever", callback_data="continue: Fever"),
+        InlineKeyboardButton("Runny Nose", callback_data="continue: Runny Nose"),
+        InlineKeyboardButton("Cough", callback_data="continue: Cough"),
+      ],
+      [
+        InlineKeyboardButton("Breathlessness", callback_data="continue: Breathlessness"),
+        InlineKeyboardButton("Sore Throat", callback_data="continue: Sore Throat"),
+      ],
+      [
+        InlineKeyboardButton("Submit", callback_data="submit"),
       ]
     ]
   )
