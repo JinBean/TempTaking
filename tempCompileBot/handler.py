@@ -63,7 +63,7 @@ def webhook(event, context):
     date = datetime.datetime.now(timezone('Asia/Singapore')).date().strftime("%d:%m:%Y")
     time = datetime.datetime.now(timezone('Asia/Singapore')).time().strftime("%H:%M:%S")
 
-    if event.get('httpMethod') == 'POST' and event.get('body'): 
+    if event.get('httpMethod') == 'POST' and event.get('body'):
         logger.info('Message received')
         update = telegram.Update.de_json(json.loads(event.get('body')), bot)
         
@@ -102,7 +102,7 @@ def webhook(event, context):
             bot.editMessageText(chat_id=chat_id, message_id=message.message_id, text="You are: " + text.split(": ")[1], reply_markup = InlineKeyboardMarkup([]))
             bot.answerCallbackQuery(callback_query_id=query_id)
             reply_markup = symptoms()
-            bot.sendMessage(chat_id=chat_id, text="Please select any symptoms you might have (click again to deselect) and click the submit button when you are done: \nSymptoms:", reply_markup=reply_markup)
+            bot.sendMessage(chat_id=chat_id, text="Please select any symptoms you might have (click again to deselect) and click the submit button when you are done. Click submit if you have no symptoms: \nSymptoms:", reply_markup=reply_markup)
 
           # Callback after selecting symptoms without submitting
           elif "continue" in text:

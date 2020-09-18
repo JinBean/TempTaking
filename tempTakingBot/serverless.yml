@@ -7,15 +7,6 @@ provider:
   # runtime: nodejs12.x
   runtime: python3.6
 
-# functions:
-#   tufftimes:
-#     handler: handler.tufftimes
-#     events:
-#       - http:
-#           path: tufftimes
-#           method: post
-#           cors: true
-
 functions:
   webhook:
     handler: handler.webhook

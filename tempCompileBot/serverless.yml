@@ -1,0 +1,22 @@
+service: TempCompile
+
+frameworkVersion: '2'
+
+provider:
+  name: aws
+  # runtime: nodejs12.x
+  runtime: python3.6
+
+functions:
+  webhook:
+    handler: handler.webhook
+    events:
+      - http: POST /
+
+  set_webhook:
+    handler: handler.set_webhook
+    events:
+      - http: POST /set_webhook
+
+plugins:
+  - serverless-python-requirements
